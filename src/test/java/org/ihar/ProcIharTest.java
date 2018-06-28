@@ -3,6 +3,7 @@ package org.ihar;
 import org.junit.Rule;
 import org.junit.Test;
 import org.neo4j.driver.v1.*;
+import org.neo4j.graphdb.Result;
 import org.neo4j.harness.junit.Neo4jRule;
 
 import static org.hamcrest.core.IsEqual.equalTo;
@@ -23,9 +24,9 @@ public class ProcIharTest {
                 .withEncryptionLevel(Config.EncryptionLevel.NONE).toConfig());
              Session session = driver.session()) {
             session.run(QUERY10);
-            StatementResult result1 = session.run(QUERY11);
-            assertEquals(result1.single().get("pNum").asLong(), 5L);
-            assertEquals(result1.single().get("relNum").asLong(), 4L);
+            Record result1 = session.run(QUERY11).single();//number of created nodes,number of created relations
+            assertEquals(result1.get("pNum").asLong(), 5L);
+            assertEquals(result1.get("relNum").asLong(), 4L);
         }
     }
 
@@ -61,22 +62,22 @@ public class ProcIharTest {
     }
 
     private static final String QUERY10 = "CALL org.ihar.createNodesAndRelations(['a7','a8','a9','a10','a11'],4)";
-    private static final String QUERY11 = "MATCH (a)-[r]-(aa) " +
-            "WHERE a.name IN ['a7','a8','a9','a10','a11'] AND aa.name IN ['a7','a8','a9','a10','a11'] " +
-            "RETURN COUNT(DISTINCT a) AS pNum,COUNT(DISTINCT r) AS relNum";
+    private static final String QUERY11 = "MATCH (p:Point),(a:Point)-[r]-(aa:Point) " +
+            "WHERE p.name IN ['a7','a8','a9','a10','a11'] AND a.name IN ['a7','a8','a9','a10','a11'] AND aa.name IN ['a7','a8','a9','a10','a11'] " +
+            "RETURN COUNT(DISTINCT p) AS pNum,COUNT(DISTINCT r) AS relNum";
 
-    private static final String QUERY20 = "CALL org.ihar.isThereCycles(['a1','a2','a3','a4']) yield iscycle";
-    private static final String QUERY21 = "CALL org.ihar.isThereCycles(['a1','a2','a4','a5']) yield iscycle";
-    private static final String QUERY22 = "CALL org.ihar.isThereCycles(['a1','a2', 'a3','a4','a5','a6]) yield iscycle";
+    private static final String QUERY20 = "CALL org.ihar.isThereCycles(['a1','a2','a3']) yield iscycle";
+    private static final String QUERY21 = "CALL org.ihar.isThereCycles(['a1','a4','a5','a6']) yield iscycle";
+    private static final String QUERY22 = "CALL org.ihar.isThereCycles(['a1','a2','a4','a5','a6']) yield iscycle";
 
-    private static final String QUERY30 = "MATCH CALL org.ihar.isThereCyclesByQuery(['a1','a2','a3','a4']) yield iscycle RETURN iscycle";
-    private static final String QUERY31 = "MATCH CALL org.ihar.isThereCyclesByQuery(['a1','a2','a4','a5']) yield iscycle RETURN iscycle";
-    private static final String QUERY32 = "MATCH CALL org.ihar.isThereCyclesByQuery(['a1','a2', 'a3','a4','a5','a6]) yield iscycle RETURN iscycle";
+    private static final String QUERY30 = "CALL org.ihar.isThereCyclesByQuery(['a1','a2','a3','a4']) yield iscycle";
+    private static final String QUERY31 = "CALL org.ihar.isThereCyclesByQuery(['a1','a2','a4','a6']) yield iscycle";
+    private static final String QUERY32 = "CALL org.ihar.isThereCyclesByQuery(['a1','a2','a3','a4','a5','a6']) yield iscycle";
 
     private static final String MODEL_STATEMENT =
             // (a1)-->(a2)-->(a3)-->(a1)
-            // (a3)-->(a4)-->(a5)-->(a1)
-            // (a4)-->(a5)
+            // (a2)-->(a4)-->(a5)-->(a1)
+            // (a3)-->(a5)
             // (a6)
             "CREATE (a1:Point {name:'a1'})" +
                     "CREATE (a2:Point {name:'a2'})" +
@@ -85,6 +86,6 @@ public class ProcIharTest {
                     "CREATE (a5:Point {name:'a5'})" +
                     "CREATE (a6:Point {name:'a6'})" +
                     "CREATE (a1)-[:WAY_TO]->(a2)-[:WAY_TO]->(a3)-[:WAY_TO]->(a1)" +
-                    "CREATE (a4)-[:WAY_TO]->(a5)" +
-                    "CREATE (a3)-[:WAY_TO]->(a4)-[:WAY_TO]->(a5)-[:WAY_TO]->(a1)";
+                    "CREATE (a3)-[:WAY_TO]->(a5)" +
+                    "CREATE (a2)-[:WAY_TO]->(a4)-[:WAY_TO]->(a5)-[:WAY_TO]->(a1)";
 }
