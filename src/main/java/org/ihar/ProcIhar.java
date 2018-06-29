@@ -29,8 +29,12 @@ public class ProcIhar {
             List<Node> nodes = new ArrayList<Node>();
             //create nodes by nodeNames
             for (String nodeName : nodeNames) {
-                Node node = db.createNode(Label.label(POINT_LABEL));
-                node.setProperty("name", nodeName);
+                Node node = db.findNode(Label.label(POINT_LABEL), "name", nodeName);
+                if (node == null) {
+                    node = db.createNode(Label.label(POINT_LABEL));
+                    node.setProperty("name", nodeName);
+
+                }
                 nodes.add(node);
             }
 
@@ -51,6 +55,7 @@ public class ProcIhar {
             tx.success();
         }
     }
+
     //detect cycle in nodes(by nodeNames) using traversal framework
     @Description("org.ihar.isThereCycles(nodeNames) | Check whether cycles exist in nodeNames")
     @Procedure(name = "org.ihar.isThereCycles", mode = Mode.READ)
@@ -88,7 +93,7 @@ public class ProcIhar {
         try (Transaction tx = db.beginTx()) {
             Map<String, Object> parameters = new HashMap<>();
             parameters.put("nodeNames", nodeNames);
-            resultIterator  = db.execute(QUERY, parameters).columnAs("p");
+            resultIterator = db.execute(QUERY, parameters).columnAs("p");
             result = resultIterator != null && resultIterator.hasNext();
             tx.success();
         }
@@ -108,7 +113,7 @@ public class ProcIhar {
     private static final String POINT_REL = "WAY_TO";
 
     //cypher query for cycle path
-    private static final String QUERY = "MATCH path=(p:"+POINT_LABEL+")-["+POINT_REL+"*]->(p)\n" +
+    private static final String QUERY = "MATCH path=(p:" + POINT_LABEL + ")-[" + POINT_REL + "*]->(p)\n" +
             "WHERE ALL(node_on_path in NODES(path) \n" +
             "  WHERE node_on_path.name IN $nodeNames) \n" +
             "  return p";

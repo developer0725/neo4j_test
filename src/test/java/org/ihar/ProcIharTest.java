@@ -3,7 +3,6 @@ package org.ihar;
 import org.junit.Rule;
 import org.junit.Test;
 import org.neo4j.driver.v1.*;
-import org.neo4j.graphdb.Result;
 import org.neo4j.harness.junit.Neo4jRule;
 
 import static org.hamcrest.core.IsEqual.equalTo;
@@ -23,10 +22,15 @@ public class ProcIharTest {
         try (Driver driver = GraphDatabase.driver(neo4j.boltURI(), Config.build()
                 .withEncryptionLevel(Config.EncryptionLevel.NONE).toConfig());
              Session session = driver.session()) {
+
             session.run(QUERY10);
-            Record result1 = session.run(QUERY11).single();//number of created nodes,number of created relations
+            Record result1 = session.run(QUERY11).single();
+            Long relNum = result1.get("relNum").asLong();
+
+            session.run(QUERY10);
+            result1 = session.run(QUERY11).single();//number of created nodes,number of created relations
             assertEquals(result1.get("pNum").asLong(), 5L);
-            assertEquals(result1.get("relNum").asLong(), 4L);
+            assertEquals(result1.get("relNum").asLong() - relNum, 4L);
         }
     }
 
