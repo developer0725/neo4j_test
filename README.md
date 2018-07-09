@@ -6,6 +6,7 @@ createNodesAndRelations(<node_names_array>, N)
 <node_names_array> - the list of nodes to create.
 N - the number of directional relations to create between random nodes.
  
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 boolean isThereCycles(<node_names_array>)
 
